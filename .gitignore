@@ -130,6 +130,5 @@ dmypy.json
 
 # client.session
 
-db.json
 db.json.lock
 db

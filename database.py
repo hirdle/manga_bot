@@ -49,7 +49,7 @@ def create_user_title(id, title):
         if title not in active_user["active_titles"]:
             active_user["active_titles"].append(title)
     
-    
+
     db.updateByQuery({"user_id": id}, active_user)
 
 
