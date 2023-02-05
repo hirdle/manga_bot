@@ -1,21 +1,20 @@
 from config_reader import config
 from keyboard import create_keyboard
+from multiprocessing import Process
 import database
+
 
 import logging
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters.builtin import IDFilter
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.utils.deep_linking import get_start_link, decode_payload
 from aiogram.dispatcher import FSMContext
-
-from multiprocessing import Process
 
 
 from pyrogram import Client, filters
-
 app = Client("client", config.api_id.get_secret_value(), config.api_hash.get_secret_value())
-
 
 
 logging.basicConfig(level=logging.INFO)
@@ -237,7 +236,7 @@ async def my_handler(client: Client, message: types.Message):
 
 if __name__ == '__main__':
 
-    p = Process(target=app.run, daemon=True)
+    p = Process(target=app.run, daemon=False)
     p.start()
 
     executor.start_polling(dp, skip_updates=True)
