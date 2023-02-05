@@ -63,8 +63,6 @@ def delete_user_title(id, title_id):
     db.updateByQuery({"user_id": id}, active_user)
 
 
-delete_user_title(941935092, 0)
-
 def get_users_by_title(title):
 
     users = db.getAll()
