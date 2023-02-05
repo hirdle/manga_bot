@@ -152,7 +152,10 @@ async def process_callback_add_title(callback_query: types.CallbackQuery):
         read_data_num = []
 
         for idx, value in enumerate(read_data):
-            finish_data['title_add']
+            
+            read_data_num.append(f"{idx+1}. {value}")
+
+            
 
         for x in range(0, len(read_data_num), 85):
 
@@ -232,7 +235,6 @@ async def my_handler(client: Client, message: types.Message):
 
 
 if __name__ == '__main__':
-    # app.run()
 
     p = Process(target=app.run, daemon=False)
     p.start()
