@@ -6,10 +6,8 @@ import database
 
 # import logging
 from aiogram import Bot, Dispatcher, executor, types
-from aiogram.dispatcher.filters.builtin import IDFilter
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.utils.deep_linking import get_start_link, decode_payload
 from aiogram.dispatcher import FSMContext
 
 
@@ -154,16 +152,13 @@ async def process_callback_add_title(callback_query: types.CallbackQuery):
         read_data_num = []
 
         for idx, value in enumerate(read_data):
-            
-            read_data_num.append(f"{idx+1}. {value}")
-
-            
+            finish_data['title_add']
 
         for x in range(0, len(read_data_num), 85):
 
             await callback_query.message.answer("".join(read_data_num[x:x+85]))
 
-        await callback_query.message.answer('Выберите номер тайтла:\n\nДля отмены введите команду: /cancel')
+        await callback_query.message.answer('Выберите номера тайтлов через пробел:\n\nДля отмены введите команду: /cancel')
 
         database.adding_active_title(callback_query["from"].id, callback_query.data[-1])
     
@@ -178,29 +173,31 @@ async def title_add(message: types.Message, state: FSMContext):
     
     finish_data = await state.get_data()
 
-    try:
+    for adding_title in finish_data['title_add'].split():
 
-        id_cat_title = database.get_user(message.from_user.id)['cat_active_title']
+        try:
 
-        read_data = None
+            id_cat_title = database.get_user(message.from_user.id)['cat_active_title']
 
-        with open(f'assets/titles_{id_cat_title}.txt', 'r') as file:
-            
-            read_data = file.readlines()[int(finish_data['title_add'])-1].strip()
-            
-            database.create_user_title(message.from_user.id, read_data)
+            read_data = None
 
-        print('[+] Title added')
+            with open(f'assets/titles_{id_cat_title}.txt', 'r') as file:
+                
+                read_data = file.readlines()[int(adding_title)-1].strip()
+                
+                database.create_user_title(message.from_user.id, read_data)
 
-        await message.answer(f"Тайтл {read_data} успешно добавлен!",
-        reply_markup=create_keyboard({}, back_button=True))
+            print('[+] Title added')
 
-    except:
+            await message.answer(f"Тайтл {read_data} успешно добавлен!",
+            reply_markup=create_keyboard({}, back_button=True))
 
-        print('[+] Title id is not found')
+        except:
 
-        await message.answer(f"Нужно вводить номер тайтла!\nПопробуйте еще раз!",
-        reply_markup=create_keyboard({}, back_button=True))
+            print('[+] Title id is not found')
+
+            await message.answer(f"Нужно вводить номер тайтла!\nПопробуйте еще раз!",
+            reply_markup=create_keyboard({}, back_button=True))
 
     await state.finish()
 
@@ -235,6 +232,7 @@ async def my_handler(client: Client, message: types.Message):
 
 
 if __name__ == '__main__':
+    # app.run()
 
     p = Process(target=app.run, daemon=False)
     p.start()
