@@ -173,6 +173,8 @@ async def my_handler(client: Client, message: types.Message):
     if message.chat.id != official_chat:
         return
     
+    print(message)
+    
     try:
     
         title = message.caption.split()[0].strip()
