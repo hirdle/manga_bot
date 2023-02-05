@@ -4,7 +4,7 @@ from multiprocessing import Process
 import database
 
 
-import logging
+# import logging
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters.builtin import IDFilter
 from aiogram.dispatcher.filters.state import StatesGroup, State
@@ -17,7 +17,7 @@ from pyrogram import Client, filters
 app = Client("client", config.api_id.get_secret_value(), config.api_hash.get_secret_value())
 
 
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=config.bot_token.get_secret_value())
 dp = Dispatcher(bot, storage=MemoryStorage())
