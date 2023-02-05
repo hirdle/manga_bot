@@ -31,6 +31,8 @@ class UserState(StatesGroup):
     title_delete = State()
 
 
+# -----------------------------Start Titles-----------------------------
+
 
 @dp.callback_query_handler(lambda c: c.data == "start")
 async def start_func(message: types.Message):    
@@ -48,6 +50,43 @@ async def start_func(message: types.Message):
                         reply_markup=create_keyboard({'Добавить новый тайтл':'add_title', 'Просмотр активных тайтлов':'active_titles'}))
 
 
+# -----------------------------Cancel State-----------------------------
+
+@dp.message_handler(commands=['cancel'], state='*')
+async def cancel(message: types.Message,  state=FSMContext):
+
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+
+    await state.finish()
+    await message.answer('Действие отменено!', reply_markup=create_keyboard({}, back_button=True))
+
+
+# -----------------------------Active Titles-----------------------------
+
+@dp.callback_query_handler(lambda c: c.data == "active_titles")
+async def process_callback_edit_titles(callback_query: types.CallbackQuery):
+
+    active_user_titles = database.get_user(callback_query["from"].id)["active_titles"]
+
+    result_titles = "\n".join(active_user_titles)
+
+    keyboard = create_keyboard({'Удалить тайтл':'delete_title'}, back_button=True)
+
+    if active_user_titles == []:
+        result_titles = "Нет тайтлов!"
+
+
+        keyboard = create_keyboard({}, back_button=True)
+
+    
+    await callback_query.message.edit_text('Ваши активные тайтлы:\n\n' + result_titles,                           
+                                            reply_markup=keyboard)
+
+
+# -----------------------------Delete Titles-----------------------------
+
 @dp.callback_query_handler(lambda c: c.data == "delete_title")
 async def process_callback_delete_titles(callback_query: types.CallbackQuery):
 
@@ -63,7 +102,7 @@ async def process_callback_delete_titles(callback_query: types.CallbackQuery):
         result_titles = "Нет тайтлов!"
 
     
-    await callback_query.message.edit_text('Введите тайтл, который нужно удалить:\n\n' + result_titles)
+    await callback_query.message.edit_text('Введите номер тайтла, который нужно удалить:\n\n' + result_titles + "\n\nДля отмены введите команду: /cancel")
 
     await UserState.title_delete.set()
 
@@ -75,39 +114,28 @@ async def title_delete(message: types.Message, state: FSMContext):
     
     finish_data = await state.get_data()
 
-    database.delete_user_title(message.from_user.id, finish_data['title_delete'])
+    try:
 
-    print('[+] Title deleted')
+        database.delete_user_title(message.from_user.id, int(finish_data['title_delete'])-1)
 
-    await message.answer(f"Тайтл {str(finish_data['title_delete'])} успешно удален!",
-    reply_markup=create_keyboard({}, back_button=True))
+        print('[+] Title deleted')
+
+        await message.answer(f"Тайтл {str(finish_data['title_delete'])} успешно удален!",
+        reply_markup=create_keyboard({}, back_button=True))
+
+    except:
+
+        print('[+] Title is not found')
+
+        await message.answer(f"Тайтл c ID {str(finish_data['title_delete'])} не найден!\nПопробуйте еще раз.",
+
+        reply_markup=create_keyboard({}, back_button=True))
 
     await state.finish()
 
 
-@dp.callback_query_handler(lambda c: c.data == "active_titles")
-async def process_callback_edit_titles(callback_query: types.CallbackQuery):
 
-    active_user_titles = database.get_user(callback_query["from"].id)["active_titles"]
-
-    result_titles = "\n".join(active_user_titles)
-
-    keyboard = create_keyboard({}, back_button=True)
-
-    if active_user_titles == []:
-        result_titles = "Нет тайтлов!\nНазад: /start"
-
-
-        keyboard = create_keyboard({'Удалить тайтл':'delete_title'}, back_button=True)
-
-
-
-
-    
-    await callback_query.message.edit_text('Ваши активные тайтлы:\n\n' + result_titles,                           
-                                            reply_markup=keyboard)
-
-
+# -----------------------------Add Titles-----------------------------
 
 @dp.callback_query_handler(lambda c: c.data == "add_title")
 async def process_callback_add_title_cat(callback_query: types.CallbackQuery):
@@ -136,10 +164,11 @@ async def process_callback_add_title(callback_query: types.CallbackQuery):
 
             await callback_query.message.answer("".join(read_data_num[x:x+85]))
 
-        await callback_query.message.answer('Выберите номер тайтла:')
+        await callback_query.message.answer('Выберите номер тайтла:\n\nДля отмены введите команду: /cancel')
 
         database.adding_active_title(callback_query["from"].id, callback_query.data[-1])
     
+
     await UserState.title_add.set()
 
 
@@ -150,20 +179,39 @@ async def title_add(message: types.Message, state: FSMContext):
     
     finish_data = await state.get_data()
 
-    id_cat_title = database.get_user(message.from_user.id)['cat_active_title']
+    try:
 
-    with open(f'assets/titles_{id_cat_title}.txt', 'r') as file:
-        
-        read_data = file.readlines()[int(finish_data['title_add'])-1].strip()
-        
-        database.create_user_title(message.from_user.id, read_data)
+        id_cat_title = database.get_user(message.from_user.id)['cat_active_title']
 
-    print('[+] Title added')
+        read_data = None
 
-    await message.answer(f"Тайтл {str(finish_data['title_add'])} успешно добавлен!",
-    reply_markup=create_keyboard({}, back_button=True))
+        with open(f'assets/titles_{id_cat_title}.txt', 'r') as file:
+            
+            read_data = file.readlines()[int(finish_data['title_add'])-1].strip()
+            
+            database.create_user_title(message.from_user.id, read_data)
+
+        print('[+] Title added')
+
+        await message.answer(f"Тайтл {read_data} успешно добавлен!",
+        reply_markup=create_keyboard({}, back_button=True))
+
+    except:
+
+        print('[+] Title id is not found')
+
+        await message.answer(f"Нужно вводить номер тайтла!\nПопробуйте еще раз!",
+        reply_markup=create_keyboard({}, back_button=True))
 
     await state.finish()
+
+
+
+
+
+
+
+
 
 
 @app.on_message(filters=filters.channel)
@@ -173,7 +221,6 @@ async def my_handler(client: Client, message: types.Message):
     if message.chat.id != official_chat:
         return
     
-    print(message)
     
     try:
     
@@ -182,7 +229,7 @@ async def my_handler(client: Client, message: types.Message):
 
 
         for user in users:
-            await bot.send_message(user["user_id"], f"Новый пост!\nТайтл: {title}\n\nСсылка на пост: t.me/{message.chat.username}/{message.forward_from_message_id}")
+            await bot.send_message(user["user_id"], f"Новый пост!\nТайтл: {title}\n\nСсылка на пост: t.me/{message.chat.username}/{message.id}")
 
     except:
         pass

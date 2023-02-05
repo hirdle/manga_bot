@@ -51,17 +51,19 @@ def create_user_title(id, title):
     db.updateByQuery({"user_id": id}, active_user)
 
 
-def delete_user_title(id, title):
+def delete_user_title(id, title_id):
     active_user = get_user(id)
 
     if active_user:
 
-        print("[+] Removing title " + str(title) + " from user " + str(id))
+        print("[+] Removing title with ID: " + str(title_id) + " from user " + str(id))
 
-        active_user["active_titles"].remove(title)
+        active_user["active_titles"].pop(title_id)
     
     db.updateByQuery({"user_id": id}, active_user)
 
+
+delete_user_title(941935092, 0)
 
 def get_users_by_title(title):
 
