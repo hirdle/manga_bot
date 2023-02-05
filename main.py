@@ -173,13 +173,17 @@ async def my_handler(client: Client, message: types.Message):
     if message.chat.id != official_chat:
         return
     
-    title = message.caption.split()[0].strip()
-    users = database.get_users_by_title(title)
+    try:
+    
+        title = message.caption.split()[0].strip()
+        users = database.get_users_by_title(title)
 
 
-    for user in users:
-        await bot.send_message(user["user_id"], f"Новый пост!\nТайтл: {title}\n\nСсылка на пост: t.me/{message.chat.username}/{message.forward_from_message_id}")
+        for user in users:
+            await bot.send_message(user["user_id"], f"Новый пост!\nТайтл: {title}\n\nСсылка на пост: t.me/{message.chat.username}/{message.forward_from_message_id}")
 
+    except:
+        pass
 
 
 if __name__ == '__main__':
