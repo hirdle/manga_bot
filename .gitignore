@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 
-client.session
+# client.session
 db.json
 db.json.lock
 db
